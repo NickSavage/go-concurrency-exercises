@@ -13,10 +13,24 @@
 
 package main
 
+import (
+	"log"
+	"os"
+	"os/signal"
+	"syscall"
+)
+
 func main() {
 	// Create a process
 	proc := MockProcess{}
-
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, syscall.SIGINT)
 	// Run the process (blocking)
-	proc.Run()
+	go proc.Run()
+	sig := <-signalChan
+	log.Printf("trying to kill gracefully, %v", sig)
+	go proc.Stop()
+	sig = <-signalChan
+
+	log.Printf("killing now: %v", sig)
 }
